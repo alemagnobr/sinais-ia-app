@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinais IA - App Completo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen pb-20">
+
+    <!-- CABEÇALHO -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <span onclick="mostrarFeed()" class="text-2xl font-bold text-green-600 cursor-pointer">Sinais IA</span>
+                <div class="flex gap-2 items-center">
+                    <!-- Botão Admin -->
+                    <button id="btnAdminNav" onclick="alternarAdmin()" class="hidden text-gray-600 hover:text-green-600 font-bold px-3 py-2 rounded-md border border-gray-200 bg-gray-50 mr-2">
+                        🔧 Admin
+                    </button>
+                    
+                    <!-- Área do Usuário -->
+                    <div id="userInfo" class="hidden flex items-center gap-2">
+                        <div class="text-right hidden md:block">
+                            <span id="userEmail" class="block text-xs font-bold text-gray-700"></span>
+                            <span id="vipBadge" class="hidden text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded border border-yellow-200">CLIENTE VIP 👑</span>
+                        </div>
+                        <button onclick="fazerLogout()" class="text-sm text-red-500 hover:text-red-700 font-medium border border-red-200 rounded px-3 py-1">Sair</button>
+                    </div>
+
+                    <button id="btnLoginNav" onclick="abrirLogin()" class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-md shadow-sm">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-4 md:p-6">
+        
+        <!-- ==================== ÁREA DE FEED (CLIENTE) ==================== -->
+        <div id="view-feed">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Sinais do Dia</h1>
+                <!-- Botão Flutuante WhatsApp Mobile -->
+                <button onclick="irParaWhatsApp()" class="bg-green-500 text-white p-2 rounded-full shadow-lg hover:bg-green-600 md:hidden">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                </button>
+            </div>
+            
+            <div id="sinais-container" class="space-y-6">
+                <div class="flex justify-center py-10">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== ÁREA DE ADMIN (VOCÊ) ==================== -->
+        <div id="view-admin" class="hidden space-y-8">
+            
+            <!-- 1. Gestão de VIPs -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-yellow-200">
+                <div class="bg-yellow-100 p-4 border-b border-yellow-200">
+                    <h2 class="text-lg font-bold text-yellow-800 flex items-center gap-2">
+                        👑 Gestão de Assinantes VIP
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Liberar acesso para o e-mail:</label>
+                    <div class="flex gap-2">
+                        <input type="email" id="vipEmailInput" class="flex-1 border rounded p-2" placeholder="cliente@email.com">
+                        <button onclick="adicionarVip()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded">
+                            Liberar VIP
+                        </button>
+                    </div>
+                    <p id="vipMsg" class="text-sm mt-2"></p>
+                </div>
+            </div>
+
+            <!-- 2. Cadastro de Sinais -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+                <div class="bg-gray-800 p-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Cadastrar Novo Sinal</h2>
+                    </div>
+                    <button onclick="mostrarFeed()" class="text-gray-400 hover:text-white">✕ Voltar ao Feed</button>
+                </div>
+
+                <form id="sinalForm" class="p-6 space-y-4">
+                    <!-- Campos do Formulário -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Jogo</label>
+                            <input type="text" name="jogo" required class="w-full border rounded p-2" placeholder="Ex: Time A vs Time B">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Liga</label>
+                            <input type="text" name="liga" required class="w-full border rounded p-2" placeholder="Ex: Brasileirão">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Data e Hora</label>
+                            <input type="datetime-local" name="dataHora" required class="w-full border rounded p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Mercado</label>
+                            <input type="text" name="mercado" required class="w-full border rounded p-2" placeholder="Ex: Over 2.5">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Sinal</label>
+                            <input type="text" name="sinal" required class="w-full border rounded p-2" placeholder="Ex: Sim / Casa Vence">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Odd</label>
+                            <input type="number" step="0.01" name="odd" required class="w-full border rounded p-2" placeholder="1.90">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Prognóstico Completo</label>
+                        <textarea name="prognostico" rows="4" required class="w-full border rounded p-2" placeholder="Análise da IA..."></textarea>
+                    </div>
+                    <div class="flex items-center bg-yellow-50 p-3 rounded border border-yellow-200">
+                        <input type="checkbox" id="isVip" name="isVip" class="h-5 w-5 text-green-600">
+                        <label for="isVip" class="ml-2 block text-sm font-medium text-gray-700">Este é um Sinal VIP 🔒</label>
+                    </div>
+                    <div class="pt-4">
+                        <button type="submit" id="btnSalvar" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded shadow">
+                            Salvar Sinal
+                        </button>
+                        <p id="msgStatus" class="text-center mt-2 text-sm hidden"></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL DE LOGIN -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 relative">
+            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-2xl text-gray-400">&times;</button>
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Acessar Conta</h2>
+            <div class="space-y-4">
+                <input type="email" id="loginEmail" placeholder="Seu E-mail" class="w-full border p-2 rounded">
+                <input type="password" id="loginPass" placeholder="Sua Senha" class="w-full border p-2 rounded">
+                <button onclick="fazerLogin()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">Entrar</button>
+                <button onclick="criarConta()" class="w-full bg-white border border-green-600 text-green-600 font-bold py-2 rounded hover:bg-green-50">Criar Nova Conta</button>
+            </div>
+            <p id="loginMsg" class="text-center text-sm mt-4 text-red-500"></p>
+        </div>
+    </div>
+
+    <!-- MODAIS DE CONTEÚDO -->
+    <div id="prognosticoModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative p-6">
+            <button onclick="closeModal('prognosticoModal')" class="absolute top-4 right-4 text-3xl">&times;</button>
+            <h3 id="modal-titulo" class="text-xl font-bold mb-2"></h3>
+            <div class="prose max-w-none text-gray-600" id="modal-conteudo"></div>
+        </div>
+    </div>
+
+    <div id="vipModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center relative">
+            <button onclick="closeModal('vipModal')" class="absolute top-4 right-4 text-3xl">&times;</button>
+            <div class="mx-auto h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center mb-4 text-2xl">🔒</div>
+            <h3 class="text-lg font-bold">Plano VIP</h3>
+            <p class="text-gray-500 mt-2">Tenha acesso a todos os sinais exclusivos e análises detalhadas.</p>
+            <div class="mt-4 p-4 bg-gray-50 rounded text-left text-sm text-gray-600 mb-4">
+                <p>✅ Sinais de alta assertividade</p>
+                <p>✅ Análises completas da IA</p>
+                <p>✅ Suporte via WhatsApp</p>
+            </div>
+            <button onclick="irParaWhatsApp()" class="mt-2 w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded font-bold flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                Assinar via WhatsApp
+            </button>
+        </div>
+    </div>
+
+    <!-- LÓGICA DO APP -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDoc, getDocs, setDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        // ======================================================
+        // CONFIGURAÇÃO DO FIREBASE
+        // ======================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgHUnQ0js1oIgChe5qGBous_hu3pbfJsw",
+            authDomain: "sinais-bulldaddy-app.firebaseapp.com",
+            projectId: "sinais-bulldaddy-app",
+            storageBucket: "sinais-bulldaddy-app.firebasestorage.app",
+            messagingSenderId: "472621692802",
+            appId: "1:472621692802:web:ea87f1e8e70c3f572a819b",
+            measurementId: "G-DD3EG57BLQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const ADMIN_EMAIL = "admin@sinais.com"; 
+
+        // ======================================================
+        // SEU NÚMERO DE WHATSAPP ATUALIZADO
+        // ======================================================
+        const SEU_NUMERO_WHATSAPP = "556191875707"; 
+
+        // Variável Global para saber se o usuário é VIP
+        let currentUserIsVip = false;
+
+        window.irParaWhatsApp = () => {
+            const user = auth.currentUser;
+            const emailText = user ? ` (Meu email: ${user.email})` : "";
+            const msg = `Olá! Gostaria de assinar o Plano VIP do Sinais IA.${emailText}`;
+            const url = `https://wa.me/${SEU_NUMERO_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+        };
+
+        // --- GESTÃO DE VIPs (ADMIN) ---
+        window.adicionarVip = async () => {
+            const email = document.getElementById('vipEmailInput').value.trim();
+            const msg = document.getElementById('vipMsg');
+            if (!email) return;
+
+            try {
+                // Cria um documento na coleção 'vips' com o ID sendo o email do usuário
+                await setDoc(doc(db, "vips", email), { 
+                    criadoEm: serverTimestamp(),
+                    aprovadoPor: auth.currentUser.email
+                });
+                msg.textContent = `Sucesso! ${email} agora é VIP.`;
+                msg.className = "text-sm mt-2 text-green-600";
+                document.getElementById('vipEmailInput').value = '';
+            } catch (e) {
+                msg.textContent = "Erro: " + e.message;
+                msg.className = "text-sm mt-2 text-red-600";
+            }
+        };
+
+        // --- SISTEMA DE LOGIN ---
+        window.abrirLogin = () => document.getElementById('loginModal').classList.remove('hidden');
+        
+        window.fazerLogin = async () => {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                closeModal('loginModal');
+            } catch (error) { document.getElementById('loginMsg').textContent = "Erro: " + error.message; }
+        };
+
+        window.criarConta = async () => {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            if(pass.length < 6) { document.getElementById('loginMsg').textContent = "Senha deve ter 6+ dígitos."; return; }
+            try {
+                await createUserWithEmailAndPassword(auth, email, pass);
+                closeModal('loginModal');
+                alert("Conta criada!");
+            } catch (error) { document.getElementById('loginMsg').textContent = "Erro: " + error.message; }
+        };
+
+        window.fazerLogout = () => signOut(auth);
+
+        // OUVINTE DE AUTH (Roda quando loga/desloga)
+        onAuthStateChanged(auth, async (user) => {
+            const btnLogin = document.getElementById('btnLoginNav');
+            const userInfo = document.getElementById('userInfo');
+            const btnAdmin = document.getElementById('btnAdminNav');
+            
+            if (user) {
+                btnLogin.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+                document.getElementById('userEmail').textContent = user.email;
+
+                // 1. Checa se é Admin
+                if (user.email === ADMIN_EMAIL) {
+                    btnAdmin.classList.remove('hidden');
+                    currentUserIsVip = true; // Admin vê tudo
+                } else {
+                    btnAdmin.classList.add('hidden');
+                    document.getElementById('view-admin').classList.add('hidden');
+                    
+                    // 2. Checa se é VIP (Consulta no Banco)
+                    try {
+                        const vipDoc = await getDoc(doc(db, "vips", user.email));
+                        if (vipDoc.exists()) {
+                            currentUserIsVip = true;
+                            document.getElementById('vipBadge').classList.remove('hidden');
+                        } else {
+                            currentUserIsVip = false;
+                            document.getElementById('vipBadge').classList.add('hidden');
+                        }
+                    } catch (e) { currentUserIsVip = false; }
+                }
+            } else {
+                currentUserIsVip = false;
+                btnLogin.classList.remove('hidden');
+                userInfo.classList.add('hidden');
+                btnAdmin.classList.add('hidden');
+                document.getElementById('view-admin').classList.add('hidden');
+            }
+            // Recarrega os sinais com a nova permissão
+            carregarSinais();
+        });
+
+        // --- NAVEGAÇÃO ---
+        window.mostrarFeed = () => {
+            document.getElementById('view-feed').classList.remove('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+            carregarSinais();
+        };
+
+        window.alternarAdmin = () => {
+            const feed = document.getElementById('view-feed');
+            const admin = document.getElementById('view-admin');
+            if (feed.classList.contains('hidden')) { mostrarFeed(); } 
+            else { feed.classList.add('hidden'); admin.classList.remove('hidden'); }
+        };
+
+        // --- CARREGAMENTO ---
+        function formatarData(timestamp) {
+            if (!timestamp) return '';
+            return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(timestamp.toDate());
+        }
+
+        async function carregarSinais() {
+            const container = document.getElementById('sinais-container');
+            try {
+                let q = query(collection(db, "sinais"), orderBy("criadoEm", "desc"));
+                let snapshot;
+                try { snapshot = await getDocs(q); } catch (e) { snapshot = await getDocs(collection(db, "sinais")); }
+
+                container.innerHTML = ''; 
+                if (snapshot.empty) { container.innerHTML = `<p class="text-center text-gray-500 py-10">Nenhum sinal no momento.</p>`; return; }
+
+                const user = auth.currentUser;
+                const isAdmin = user && user.email === ADMIN_EMAIL;
+                
+                snapshot.forEach((doc) => {
+                    container.insertAdjacentHTML('beforeend', criarCardHTML(doc.id, doc.data(), isAdmin));
+                });
+            } catch (error) { console.error(error); }
+        }
+
+        function criarCardHTML(id, data, isAdmin) {
+            const isVipContent = data.isVip;
+            // LÓGICA DE BLOQUEIO ATUALIZADA
+            // Bloqueado se: É conteúdo VIP E (Usuário não é Admin E Usuário não é VIP)
+            const isBlocked = isVipContent && !isAdmin && !currentUserIsVip;
+
+            const borderClass = isVipContent ? 'border-yellow-500' : 'border-green-500';
+            const badgeClass = isVipContent ? 'text-yellow-800 bg-yellow-100' : 'text-green-800 bg-green-100';
+            const badgeText = isVipContent ? 'Sinal VIP' : 'Sinal Gratuito';
+            
+            // Se bloqueado, borra o conteúdo
+            const blurClass = isBlocked ? 'filter blur-sm select-none' : '';
+            
+            const overlay = isBlocked ? `
+                <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px]">
+                    <div class="text-center">
+                        <span class="text-2xl">🔒</span>
+                        <button onclick="window.openModal('vipModal')" class="block mt-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-4 rounded shadow">Desbloquear</button>
+                    </div>
+                </div>` : '';
+            
+            const progSafe = data.prognostico ? data.prognostico.replace(/"/g, '&quot;').replace(/\n/g, '<br>') : '';
+            const btnApagar = isAdmin ? `<button onclick="apagarSinal('${id}')" class="absolute top-2 right-2 text-gray-300 hover:text-red-500 text-xs z-20">🗑️</button>` : '';
+
+            return `
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-4 ${borderClass} relative mb-6">
+                ${overlay} ${btnApagar}
+                <div class="px-5 py-4 border-b border-gray-100">
+                    <span class="text-xs font-semibold ${badgeClass} px-2 py-1 rounded-full uppercase">${badgeText}</span>
+                    <h2 class="text-lg font-bold text-gray-900 mt-2">${data.jogo}</h2>
+                    <p class="text-xs text-gray-500">${data.liga} • ${formatarData(data.dataHora)}</p>
+                </div>
+                <div class="px-5 py-4 bg-gray-50 ${blurClass}">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Sinal: <span class="font-bold text-blue-700 text-lg ml-1">${data.sinal}</span></p>
+                            <p class="text-sm text-gray-500">Mercado: <strong>${data.mercado}</strong></p>
+                        </div>
+                        <div class="text-right bg-white p-2 rounded border border-gray-200">
+                            <p class="text-xs text-gray-500 uppercase">Odd</p>
+                            <p class="text-xl font-bold text-gray-900">${data.odd ? data.odd.toFixed(2) : '0.00'}</p>
+                        </div>
+                    </div>
+                </div>
+                ${!isBlocked ? `<div class="px-5 py-3 bg-white border-t border-gray-100 text-center"><button onclick='abrirPrognostico("${data.jogo}", "${progSafe}")' class="text-blue-600 hover:text-blue-800 font-medium text-sm">Ver Análise Completa →</button></div>` : ''}
+            </div>`;
+        }
+
+        // --- ADMIN ---
+        const form = document.getElementById('sinalForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSalvar');
+            btn.disabled = true; btn.textContent = 'Salvando...';
+            try {
+                const formData = new FormData(form);
+                const data = {
+                    jogo: formData.get('jogo'), liga: formData.get('liga'),
+                    dataHora: new Date(formData.get('dataHora')), mercado: formData.get('mercado'),
+                    sinal: formData.get('sinal'), odd: parseFloat(formData.get('odd')), 
+                    prognostico: formData.get('prognostico'), isVip: formData.get('isVip') === 'on', 
+                    criadoEm: serverTimestamp() 
+                };
+                await addDoc(collection(db, "sinais"), data);
+                form.reset(); mostrarFeed();
+            } catch (error) { alert("Erro: " + error.message); } 
+            finally { btn.disabled = false; btn.textContent = 'Salvar Sinal'; }
+        });
+
+        window.apagarSinal = async (id) => { if(confirm("Tem certeza?")) { await deleteDoc(doc(db, "sinais", id)); carregarSinais(); } }
+        window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+        window.abrirPrognostico = (t, c) => {
+            document.getElementById('modal-titulo').textContent = t;
+            document.getElementById('modal-conteudo').innerHTML = c;
+            window.openModal('prognosticoModal');
+        };
+    </script>
+</body>
+</html>
