@@ -67,10 +67,21 @@
                 </button>
             </div>
             
-            <!-- Container Único de Sinais -->
-            <div id="sinais-container" class="space-y-6 mb-12 min-h-[100px]">
+            <!-- LISTA DE SINAIS ATIVOS -->
+            <div id="sinais-ativos" class="space-y-6 mb-8 min-h-[50px]">
                 <div class="flex justify-center py-10">
                     <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
+                </div>
+            </div>
+
+            <!-- LISTA DE SINAIS FINALIZADOS (SEPARADO) -->
+            <div id="historico-container" class="hidden">
+                <div class="flex items-center gap-2 mb-4 mt-8">
+                    <h2 class="text-xl font-bold text-gray-700">Histórico / Finalizados</h2>
+                    <div class="flex-1 h-px bg-gray-300"></div>
+                </div>
+                <div id="sinais-finalizados" class="space-y-6 mb-12 opacity-90 grayscale-[20%]">
+                    <!-- Cards finalizados entram aqui -->
                 </div>
             </div>
         </div>
@@ -217,7 +228,7 @@
             try {
                 await updateDoc(doc(db, "sinais", id), { status: status });
                 alert("Sucesso! Status atualizado.");
-                window.location.reload(); // Atualiza para mostrar o carimbo
+                window.location.reload(); // Atualiza para mostrar o carimbo e mover para lista certa
             } catch (e) {
                 alert("Erro: " + e.message);
             }
@@ -270,22 +281,55 @@
         }
 
         async function carregarSinais() {
-            const container = document.getElementById('sinais-container');
+            const containerAtivos = document.getElementById('sinais-ativos');
+            const containerFinalizados = document.getElementById('sinais-finalizados');
+            const wrapperHistorico = document.getElementById('historico-container');
+            
             try {
                 // Ordenar por Data de Criação (Ordem de Postagem)
                 let q = query(collection(db, "sinais"), orderBy("criadoEm", "desc"));
                 let snapshot = await getDocs(q).catch(() => getDocs(collection(db, "sinais")));
                 
-                container.innerHTML = '';
-                if (snapshot.empty) { container.innerHTML = `<p class="text-center text-gray-500 py-10">Nenhum sinal.</p>`; return; }
+                // Limpar containers
+                containerAtivos.innerHTML = '';
+                containerFinalizados.innerHTML = '';
+                
+                if (snapshot.empty) { 
+                    containerAtivos.innerHTML = `<p class="text-center text-gray-500 py-10">Nenhum sinal.</p>`; 
+                    wrapperHistorico.classList.add('hidden');
+                    return; 
+                }
 
                 const user = auth.currentUser;
                 const isAdmin = user && user.email === ADMIN_EMAIL;
+                
+                let temFinalizados = false;
+                let temAtivos = false;
 
                 snapshot.forEach((doc) => {
-                    // Todos os sinais vão para a mesma lista, independentemente do status
-                    container.insertAdjacentHTML('beforeend', criarCardHTML(doc.id, doc.data(), isAdmin));
+                    const data = doc.data();
+                    const cardHTML = criarCardHTML(doc.id, data, isAdmin);
+                    
+                    // Separação por Status
+                    if (data.status === 'win' || data.status === 'loss') {
+                        containerFinalizados.insertAdjacentHTML('beforeend', cardHTML);
+                        temFinalizados = true;
+                    } else {
+                        containerAtivos.insertAdjacentHTML('beforeend', cardHTML);
+                        temAtivos = true;
+                    }
                 });
+
+                // Controle de visibilidade do histórico
+                if (temFinalizados) {
+                    wrapperHistorico.classList.remove('hidden');
+                } else {
+                    wrapperHistorico.classList.add('hidden');
+                }
+
+                if (!temAtivos) {
+                    containerAtivos.innerHTML = `<p class="text-center text-gray-400 py-6 text-sm italic">Nenhum sinal ativo no momento.</p>`;
+                }
 
             } catch (error) { console.error(error); }
         }
@@ -312,8 +356,14 @@
             }
 
             if (isAdmin) {
+                // Se já estiver finalizado, mostramos apenas o botão de apagar para limpar o visual
+                const botoesAcao = status === 'pendente' 
+                    ? `<button onclick="atualizarStatus('${id}', 'win')" class="bg-green-500 text-white text-xs px-2 py-1 rounded">✅</button>
+                       <button onclick="atualizarStatus('${id}', 'loss')" class="bg-red-500 text-white text-xs px-2 py-1 rounded">❌</button>` 
+                    : '';
+
                 adminControls = `<div class="absolute top-2 right-2 z-30 flex gap-2">
-                    ${status === 'pendente' ? `<button onclick="atualizarStatus('${id}', 'win')" class="bg-green-500 text-white text-xs px-2 py-1 rounded">✅</button><button onclick="atualizarStatus('${id}', 'loss')" class="bg-red-500 text-white text-xs px-2 py-1 rounded">❌</button>` : ''}
+                    ${botoesAcao}
                     <button onclick="apagarSinal('${id}')" class="text-gray-400 hover:text-red-500 bg-white rounded-full p-1 shadow">🗑️</button>
                 </div>`;
             }
