@@ -2,22 +2,36 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sinais IA - App Completo</title>
     
-    <!-- ==================== ÍCONES DO APP (ANDROID/IOS) ==================== -->
-    <!-- Substitua o link abaixo pela URL da sua logo/ícone -->
+    <!-- ==================== CONFIGURAÇÃO PWA / ANDROID ==================== -->
+    <!-- Cor da barra do navegador (Chrome/Android/iOS) -->
+    <meta name="theme-color" content="#16a34a">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <!-- ÍCONE LOCAL (Referenciando o seu arquivo icone.png) -->
     <link rel="icon" type="image/png" href="icone.png">
     <link rel="apple-touch-icon" href="icone.png">
-    <!-- Cor da barra do navegador no celular (Verde do App) -->
-    <meta name="theme-color" content="#16a34a">
-    <!-- ===================================================================== -->
 
+    <!-- MANIFESTO LOCAL (Referenciando o seu arquivo manifest.json) -->
+    <link rel="manifest" href="manifest.json">
+    <!-- ===================================================================== -->
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Ícones (Phosphor Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .hidden { display: none; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        /* Animação do Carimbo */
         .stamp {
             transform: rotate(-5deg);
             border: 3px solid;
@@ -34,31 +48,77 @@
             opacity: 0.9;
             white-space: nowrap;
             pointer-events: none; 
+            animation: stamp-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        @keyframes stamp-pop {
+            0% { transform: translate(-50%, -50%) scale(1.5) rotate(-15deg); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(-15deg); opacity: 0.9; }
+        }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: white;
+            border-left: 4px solid;
+            padding: 15px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out forwards;
+            min-width: 250px;
+        }
+        .toast.success { border-color: #16a34a; }
+        .toast.error { border-color: #dc2626; }
+        .toast.info { border-color: #2563eb; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen pb-20">
+<body class="bg-gray-100 min-h-screen pb-20 select-none">
 
     <!-- CABEÇALHO -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-4xl mx-auto px-4">
             <div class="flex justify-between items-center h-16">
-                <span onclick="mostrarFeed()" class="text-2xl font-bold text-green-600 cursor-pointer">Sinais IA</span>
+                <span onclick="mostrarFeed()" class="text-2xl font-bold text-green-600 cursor-pointer flex items-center gap-2">
+                    <i class="ph-fill ph-trend-up"></i> Sinais IA
+                </span>
                 <div class="flex gap-2 items-center">
-                    <button id="btnAdminNav" onclick="alternarAdmin()" class="hidden text-gray-600 hover:text-green-600 font-bold px-3 py-2 rounded-md border border-gray-200 bg-gray-50 mr-2">
-                        🔧 Admin
+                    <button id="btnAdminNav" onclick="alternarAdmin()" class="hidden text-gray-600 hover:text-green-600 font-bold px-3 py-2 rounded-md border border-gray-200 bg-gray-50 mr-2 flex items-center gap-1 active:scale-95 transition-transform">
+                        <i class="ph-bold ph-wrench"></i> <span class="hidden sm:inline">Admin</span>
                     </button>
                     
                     <div id="userInfo" class="hidden flex items-center gap-2">
                         <div class="text-right hidden md:block">
                             <span id="userEmail" class="block text-xs font-bold text-gray-700"></span>
-                            <span id="vipBadge" class="hidden text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded border border-yellow-200">CLIENTE VIP 👑</span>
+                            <span id="vipBadge" class="hidden text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded border border-yellow-200">VIP 👑</span>
                         </div>
-                        <button onclick="fazerLogout()" class="text-sm text-red-500 hover:text-red-700 font-medium border border-red-200 rounded px-3 py-1">Sair</button>
+                        <button onclick="fazerLogout()" class="text-sm text-red-500 hover:text-red-700 font-medium border border-red-200 rounded px-3 py-1 flex items-center gap-1 active:scale-95 transition-transform">
+                            <i class="ph-bold ph-sign-out"></i> Sair
+                        </button>
                     </div>
 
-                    <button id="btnLoginNav" onclick="abrirLogin()" class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-md shadow-sm">
-                        Login
+                    <button id="btnLoginNav" onclick="abrirLogin()" class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-md shadow-sm flex items-center gap-1 active:scale-95 transition-transform">
+                        <i class="ph-bold ph-sign-in"></i> Login
                     </button>
                 </div>
             </div>
@@ -71,8 +131,8 @@
         <div id="view-feed">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Sinais do Dia</h1>
-                <button onclick="irParaWhatsApp()" class="bg-green-500 text-white p-2 rounded-full shadow-lg hover:bg-green-600 md:hidden">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                <button onclick="irParaWhatsApp()" class="bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600 md:hidden flex items-center justify-center active:scale-90 transition-transform">
+                    <i class="ph-fill ph-whatsapp-logo text-2xl"></i>
                 </button>
             </div>
             
@@ -106,8 +166,8 @@
                 <div class="p-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Liberar e-mail:</label>
                     <div class="flex gap-2">
-                        <input type="email" id="vipEmailInput" class="flex-1 border rounded p-2" placeholder="cliente@email.com">
-                        <button onclick="adicionarVip()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded">
+                        <input type="email" id="vipEmailInput" class="flex-1 border rounded p-2 outline-none focus:ring-2 focus:ring-yellow-400" placeholder="cliente@email.com">
+                        <button onclick="adicionarVip()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded active:scale-95 transition-transform">
                             Liberar
                         </button>
                     </div>
@@ -118,30 +178,29 @@
             <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
                 <div class="bg-gray-800 p-6 flex justify-between items-center">
                     <h2 class="text-xl font-bold text-white">Novo Sinal</h2>
-                    <button onclick="mostrarFeed()" class="text-gray-400 hover:text-white">✕ Voltar</button>
+                    <button onclick="mostrarFeed()" class="text-gray-400 hover:text-white flex items-center gap-1">✕ Voltar</button>
                 </div>
                 <form id="sinalForm" class="p-6 space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-medium text-gray-700">Time da Casa</label><input type="text" id="timeCasa" required class="w-full border rounded p-2"></div>
-                        <div><label class="block text-sm font-medium text-gray-700">Time Visitante</label><input type="text" id="timeVisitante" required class="w-full border rounded p-2"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Time da Casa</label><input type="text" id="timeCasa" required class="w-full border rounded p-2 focus:ring-2 focus:ring-green-500 outline-none"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Time Visitante</label><input type="text" id="timeVisitante" required class="w-full border rounded p-2 focus:ring-2 focus:ring-green-500 outline-none"></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-medium text-gray-700">Liga</label><input type="text" name="liga" required class="w-full border rounded p-2"></div>
-                        <div><label class="block text-sm font-medium text-gray-700">Data/Hora</label><input type="datetime-local" name="dataHora" required class="w-full border rounded p-2"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Liga</label><input type="text" name="liga" required class="w-full border rounded p-2 focus:ring-2 focus:ring-green-500 outline-none"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Data/Hora</label><input type="datetime-local" name="dataHora" required class="w-full border rounded p-2 focus:ring-2 focus:ring-green-500 outline-none"></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-medium text-gray-700">Mercado</label><input type="text" name="mercado" required class="w-full border rounded p-2"></div>
-                        <div><label class="block text-sm font-medium text-gray-700">Sinal</label><input type="text" name="sinal" required class="w-full border rounded p-2"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Mercado</label><input type="text" name="mercado" required class="w-full border rounded p-2 focus:ring-2 focus:ring-green-500 outline-none"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Sinal</label><input type="text" name="sinal" required class="w-full border rounded p-2 focus:ring-2 focus:ring-green-500 outline-none"></div>
                     </div>
-                    <div><label class="block text-sm font-medium text-gray-700">Odd</label><input type="number" step="0.01" name="odd" required class="w-full border rounded p-2"></div>
-                    <div><label class="block text-sm font-medium text-gray-700">Prognóstico</label><textarea name="prognostico" rows="4" required class="w-full border rounded p-2"></textarea></div>
-                    <div class="flex items-center bg-yellow-50 p-3 rounded border border-yellow-200">
-                        <input type="checkbox" id="isVip" name="isVip" class="h-5 w-5 text-green-600">
-                        <label for="isVip" class="ml-2 block text-sm font-medium text-gray-700">Este é um Sinal VIP 🔒</label>
+                    <div><label class="block text-sm font-medium text-gray-700">Odd</label><input type="number" step="0.01" name="odd" required class="w-full border rounded p-2 focus:ring-2 focus:ring-green-500 outline-none"></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Prognóstico</label><textarea name="prognostico" rows="4" required class="w-full border rounded p-2 focus:ring-2 focus:ring-green-500 outline-none"></textarea></div>
+                    <div class="flex items-center bg-yellow-50 p-3 rounded border border-yellow-200 cursor-pointer" onclick="document.getElementById('isVip').click()">
+                        <input type="checkbox" id="isVip" name="isVip" class="h-5 w-5 text-green-600 rounded cursor-pointer">
+                        <label for="isVip" class="ml-2 block text-sm font-medium text-gray-700 cursor-pointer">Este é um Sinal VIP 🔒</label>
                     </div>
                     <div class="pt-4">
-                        <button type="submit" id="btnSalvar" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded shadow">Salvar Sinal</button>
-                        <p id="msgStatus" class="text-center mt-2 text-sm hidden"></p>
+                        <button type="submit" id="btnSalvar" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded shadow transition-all active:scale-[0.98]">Salvar Sinal</button>
                     </div>
                 </form>
             </div>
@@ -149,42 +208,61 @@
 
     </main>
 
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
+
     <!-- MODAIS -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50 hidden">
-        <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 relative">
-            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-2xl text-gray-400">&times;</button>
+    
+    <!-- Modal de Login -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50 hidden backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 relative animate-[scaleIn_0.2s_ease-out]">
+            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-600">&times;</button>
             <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Acessar Conta</h2>
             <div class="space-y-4">
-                <input type="email" id="loginEmail" placeholder="E-mail" class="w-full border p-2 rounded">
-                <input type="password" id="loginPass" placeholder="Senha" class="w-full border p-2 rounded">
-                <button onclick="fazerLogin()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">Entrar</button>
-                <button onclick="criarConta()" class="w-full bg-white border border-green-600 text-green-600 font-bold py-2 rounded hover:bg-green-50">Criar Conta</button>
+                <input type="email" id="loginEmail" placeholder="E-mail" class="w-full border p-2 rounded focus:ring-2 focus:ring-green-500 outline-none">
+                <input type="password" id="loginPass" placeholder="Senha" class="w-full border p-2 rounded focus:ring-2 focus:ring-green-500 outline-none">
+                <button onclick="fazerLogin()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition-transform active:scale-95">Entrar</button>
+                <button onclick="criarConta()" class="w-full bg-white border border-green-600 text-green-600 font-bold py-2 rounded hover:bg-green-50 transition-transform active:scale-95">Criar Conta</button>
             </div>
-            <p id="loginMsg" class="text-center text-sm mt-4 text-red-500"></p>
+            <p id="loginMsg" class="text-center text-sm mt-4 text-red-500 font-medium"></p>
         </div>
     </div>
 
-    <div id="prognosticoModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50 hidden">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative p-6">
-            <button onclick="closeModal('prognosticoModal')" class="absolute top-4 right-4 text-3xl">&times;</button>
-            <h3 id="modal-titulo" class="text-xl font-bold mb-2"></h3>
-            <div class="prose max-w-none text-gray-600" id="modal-conteudo"></div>
+    <!-- Modal de Confirmação (Substitui o window.confirm) -->
+    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-[60] hidden backdrop-blur-sm">
+        <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 relative animate-[scaleIn_0.2s_ease-out]">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Confirmação</h3>
+            <p id="confirmMessage" class="text-gray-600 mb-6">Tem certeza que deseja realizar esta ação?</p>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeConfirm(false)" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors">Cancelar</button>
+                <button onclick="closeConfirm(true)" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium transition-colors shadow">Confirmar</button>
+            </div>
         </div>
     </div>
 
-    <div id="vipModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50 hidden">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center relative">
-            <button onclick="closeModal('vipModal')" class="absolute top-4 right-4 text-3xl">&times;</button>
-            <div class="mx-auto h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center mb-4 text-2xl">🔒</div>
-            <h3 class="text-lg font-bold">Plano VIP</h3>
-            <p class="text-gray-500 mt-2">Acesse sinais exclusivos.</p>
-            <div class="mt-4 p-4 bg-gray-50 rounded text-left text-sm text-gray-600 mb-4">
-                <p>✅ Sinais de alta assertividade</p>
-                <p>✅ Análises completas da IA</p>
-                <p>✅ Suporte via WhatsApp</p>
+    <!-- Modal de Prognóstico -->
+    <div id="prognosticoModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative p-6 animate-[scaleIn_0.2s_ease-out]">
+            <button onclick="closeModal('prognosticoModal')" class="absolute top-4 right-4 text-3xl text-gray-400 hover:text-gray-600">&times;</button>
+            <h3 id="modal-titulo" class="text-xl font-bold mb-4 text-green-700 border-b pb-2"></h3>
+            <div class="prose max-w-none text-gray-700 leading-relaxed space-y-2" id="modal-conteudo"></div>
+        </div>
+    </div>
+
+    <!-- Modal VIP -->
+    <div id="vipModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center relative animate-[scaleIn_0.2s_ease-out]">
+            <button onclick="closeModal('vipModal')" class="absolute top-4 right-4 text-3xl text-gray-400 hover:text-gray-600">&times;</button>
+            <div class="mx-auto h-16 w-16 rounded-full bg-yellow-100 flex items-center justify-center mb-4 text-3xl animate-bounce">🔒</div>
+            <h3 class="text-xl font-bold text-gray-900">Plano VIP</h3>
+            <p class="text-gray-500 mt-2">Este sinal é exclusivo para membros VIP.</p>
+            <div class="mt-6 p-4 bg-gray-50 rounded text-left text-sm text-gray-600 mb-6 space-y-2 border border-gray-100">
+                <p class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-green-500"></i> Sinais de alta assertividade</p>
+                <p class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-green-500"></i> Análises completas da IA</p>
+                <p class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-green-500"></i> Suporte via WhatsApp</p>
             </div>
-            <button onclick="irParaWhatsApp()" class="mt-2 w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded font-bold flex items-center justify-center gap-2">
-                Assinar via WhatsApp
+            <button onclick="irParaWhatsApp()" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-transform transform hover:scale-[1.02] active:scale-95 shadow-md">
+                <i class="ph-fill ph-whatsapp-logo text-xl"></i> Assinar via WhatsApp
             </button>
         </div>
     </div>
@@ -195,6 +273,7 @@
         import { getFirestore, collection, addDoc, getDoc, updateDoc, getDocs, setDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+        // CONFIGURAÇÃO FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyAgHUnQ0js1oIgChe5qGBous_hu3pbfJsw",
             authDomain: "sinais-bulldaddy-app.firebaseapp.com",
@@ -212,81 +291,173 @@
         const SEU_NUMERO_WHATSAPP = "556191875707"; 
 
         let currentUserIsVip = false;
+        let confirmResolve = null;
+
+        // --- SISTEMA DE NOTIFICAÇÃO (TOAST) ---
+        window.showToast = (message, type = 'info') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = '';
+            if(type === 'success') icon = '<i class="ph-fill ph-check-circle text-green-600 text-xl"></i>';
+            if(type === 'error') icon = '<i class="ph-fill ph-warning-circle text-red-600 text-xl"></i>';
+            if(type === 'info') icon = '<i class="ph-fill ph-info text-blue-600 text-xl"></i>';
+
+            toast.innerHTML = `${icon}<span class="text-sm font-medium text-gray-800">${message}</span>`;
+            
+            container.appendChild(toast);
+
+            // Remover após 3 segundos
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease-out forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        // --- SISTEMA DE CONFIRMAÇÃO CUSTOMIZADO ---
+        window.customConfirm = (message) => {
+            return new Promise((resolve) => {
+                document.getElementById('confirmMessage').textContent = message;
+                document.getElementById('confirmModal').classList.remove('hidden');
+                confirmResolve = resolve;
+            });
+        };
+
+        window.closeConfirm = (result) => {
+            document.getElementById('confirmModal').classList.add('hidden');
+            if (confirmResolve) {
+                confirmResolve(result);
+                confirmResolve = null;
+            }
+        };
+
+        // --- FUNÇÕES DE NAVEGAÇÃO E AÇÃO ---
 
         window.irParaWhatsApp = () => {
-            const url = `https://wa.me/${SEU_NUMERO_WHATSAPP}?text=${encodeURIComponent("Olá! Quero ser VIP.")}`;
+            const url = `https://wa.me/${SEU_NUMERO_WHATSAPP}?text=${encodeURIComponent("Olá! Quero ser VIP no Sinais IA.")}`;
             window.open(url, '_blank');
         };
 
         window.adicionarVip = async () => {
-            const email = document.getElementById('vipEmailInput').value.trim();
+            const emailInput = document.getElementById('vipEmailInput');
+            const email = emailInput.value.trim();
             const msg = document.getElementById('vipMsg');
-            if (!email) return;
+            
+            if (!email) {
+                window.showToast("Digite um e-mail válido", "error");
+                return;
+            }
+
             try {
                 await setDoc(doc(db, "vips", email), { criadoEm: serverTimestamp() });
-                msg.textContent = `Sucesso! ${email} é VIP.`;
+                window.showToast(`${email} agora é VIP!`, "success");
+                msg.textContent = `${email} liberado com sucesso.`;
                 msg.className = "text-sm mt-2 text-green-600";
+                emailInput.value = '';
             } catch (e) {
+                window.showToast("Erro ao adicionar VIP", "error");
                 msg.textContent = "Erro: " + e.message;
+                msg.className = "text-sm mt-2 text-red-600";
             }
         };
 
-        // --- ATUALIZAÇÃO DE STATUS (Mantendo na mesma lista) ---
         window.atualizarStatus = async (id, status) => {
-            if(!confirm(`Marcar como ${status.toUpperCase()}?`)) return;
+            const confirmacao = await window.customConfirm(`Marcar este sinal como ${status.toUpperCase()}?`);
+            if(!confirmacao) return;
+
             try {
                 await updateDoc(doc(db, "sinais", id), { status: status });
-                alert("Sucesso! Status atualizado.");
-                window.location.reload(); // Atualiza para mostrar o carimbo e mover para lista certa
+                window.showToast("Status atualizado com sucesso!", "success");
+                carregarSinais(); // Recarrega sem refresh total da página
             } catch (e) {
-                alert("Erro: " + e.message);
+                window.showToast("Erro ao atualizar: " + e.message, "error");
             }
         };
 
         window.abrirLogin = () => document.getElementById('loginModal').classList.remove('hidden');
+        
         window.fazerLogin = async () => {
             try {
                 await signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPass').value);
                 closeModal('loginModal');
-            } catch (error) { document.getElementById('loginMsg').textContent = "Erro: " + error.message; }
+                window.showToast("Login realizado com sucesso!", "success");
+            } catch (error) { 
+                document.getElementById('loginMsg').textContent = "Erro: " + error.message;
+                window.showToast("Erro no login", "error");
+            }
         };
+
         window.criarConta = async () => {
             try {
                 await createUserWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPass').value);
                 closeModal('loginModal');
-            } catch (error) { document.getElementById('loginMsg').textContent = "Erro: " + error.message; }
+                window.showToast("Conta criada com sucesso!", "success");
+            } catch (error) { 
+                document.getElementById('loginMsg').textContent = "Erro: " + error.message; 
+                window.showToast("Erro ao criar conta", "error");
+            }
         };
-        window.fazerLogout = () => signOut(auth);
+
+        window.fazerLogout = async () => {
+            await signOut(auth);
+            window.showToast("Você saiu da conta", "info");
+        }
 
         onAuthStateChanged(auth, async (user) => {
             const btnLogin = document.getElementById('btnLoginNav');
             const userInfo = document.getElementById('userInfo');
             const btnAdmin = document.getElementById('btnAdminNav');
+            
             if (user) {
-                btnLogin.classList.add('hidden'); userInfo.classList.remove('hidden');
-                document.getElementById('userEmail').textContent = user.email;
+                btnLogin.classList.add('hidden'); 
+                userInfo.classList.remove('hidden');
+                document.getElementById('userEmail').textContent = user.email.split('@')[0]; // Mostra apenas o nome antes do @
+                
                 if (user.email === ADMIN_EMAIL) {
-                    btnAdmin.classList.remove('hidden'); currentUserIsVip = true;
+                    btnAdmin.classList.remove('hidden'); 
+                    currentUserIsVip = true;
                 } else {
-                    btnAdmin.classList.add('hidden'); document.getElementById('view-admin').classList.add('hidden');
+                    btnAdmin.classList.add('hidden'); 
+                    document.getElementById('view-admin').classList.add('hidden');
                     try {
                         const vipDoc = await getDoc(doc(db, "vips", user.email));
                         currentUserIsVip = vipDoc.exists();
                         if(currentUserIsVip) document.getElementById('vipBadge').classList.remove('hidden');
+                        else document.getElementById('vipBadge').classList.add('hidden');
                     } catch (e) {}
                 }
             } else {
-                currentUserIsVip = false; btnLogin.classList.remove('hidden'); userInfo.classList.add('hidden'); btnAdmin.classList.add('hidden');
+                currentUserIsVip = false; 
+                btnLogin.classList.remove('hidden'); 
+                userInfo.classList.add('hidden'); 
+                btnAdmin.classList.add('hidden');
+                document.getElementById('view-admin').classList.add('hidden');
+                document.getElementById('view-feed').classList.remove('hidden');
             }
             carregarSinais();
         });
 
-        window.mostrarFeed = () => { document.getElementById('view-feed').classList.remove('hidden'); document.getElementById('view-admin').classList.add('hidden'); carregarSinais(); };
-        window.alternarAdmin = () => { const feed = document.getElementById('view-feed'); if (feed.classList.contains('hidden')) mostrarFeed(); else { feed.classList.add('hidden'); document.getElementById('view-admin').classList.remove('hidden'); } };
+        window.mostrarFeed = () => { 
+            document.getElementById('view-feed').classList.remove('hidden'); 
+            document.getElementById('view-admin').classList.add('hidden'); 
+            carregarSinais(); 
+        };
+
+        window.alternarAdmin = () => { 
+            const feed = document.getElementById('view-feed'); 
+            if (feed.classList.contains('hidden')) {
+                mostrarFeed(); 
+            } else { 
+                feed.classList.add('hidden'); 
+                document.getElementById('view-admin').classList.remove('hidden'); 
+            } 
+        };
 
         function formatarData(timestamp) {
             if (!timestamp) return '';
-            return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(timestamp.toDate());
+            const data = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(data);
         }
 
         async function carregarSinais() {
@@ -304,7 +475,7 @@
                 containerFinalizados.innerHTML = '';
                 
                 if (snapshot.empty) { 
-                    containerAtivos.innerHTML = `<p class="text-center text-gray-500 py-10">Nenhum sinal.</p>`; 
+                    containerAtivos.innerHTML = `<div class="text-center py-10 flex flex-col items-center text-gray-400 gap-2"><i class="ph ph-mask-sad text-4xl"></i><p>Nenhum sinal encontrado.</p></div>`; 
                     wrapperHistorico.classList.add('hidden');
                     return; 
                 }
@@ -329,7 +500,6 @@
                     }
                 });
 
-                // Controle de visibilidade do histórico
                 if (temFinalizados) {
                     wrapperHistorico.classList.remove('hidden');
                 } else {
@@ -337,10 +507,13 @@
                 }
 
                 if (!temAtivos) {
-                    containerAtivos.innerHTML = `<p class="text-center text-gray-400 py-6 text-sm italic">Nenhum sinal ativo no momento.</p>`;
+                    containerAtivos.innerHTML = `<div class="text-center py-6 text-sm text-gray-500 bg-white rounded-lg border border-dashed border-gray-300">Nenhum sinal ativo no momento.</div>`;
                 }
 
-            } catch (error) { console.error(error); }
+            } catch (error) { 
+                console.error(error);
+                window.showToast("Erro ao carregar sinais", "error");
+            }
         }
 
         function criarCardHTML(id, data, isAdmin) {
@@ -352,61 +525,78 @@
             // Lógica Visual baseada no status
             if (status === 'win') {
                 borderClass = 'border-green-600'; bgClass = 'bg-green-50';
-                badgeHTML = `<div class="stamp border-green-600 text-green-600 bg-white/90">✅ GREEN</div>`;
+                badgeHTML = `<div class="stamp border-green-600 text-green-600 bg-white/95 shadow-lg">✅ GREEN</div>`;
             } else if (status === 'loss') {
                 borderClass = 'border-red-600'; bgClass = 'bg-red-50';
-                badgeHTML = `<div class="stamp border-red-600 text-red-600 bg-white/90">❌ RED</div>`;
+                badgeHTML = `<div class="stamp border-red-600 text-red-600 bg-white/95 shadow-lg">❌ RED</div>`;
             } else {
                 // Pendente
                 borderClass = isVip ? 'border-yellow-500' : 'border-green-500';
-                bgClass = isBlocked ? 'filter blur-sm select-none' : 'bg-gray-50';
-                badgeHTML = `<span class="text-xs font-semibold ${isVip ? 'text-yellow-800 bg-yellow-100' : 'text-green-800 bg-green-100'} px-2 py-1 rounded-full uppercase">${isVip ? 'VIP' : 'Grátis'}</span>`;
-                if (isBlocked) overlayHTML = `<div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px]"><button onclick="window.openModal('vipModal')" class="bg-yellow-500 text-white font-bold py-1 px-4 rounded shadow">Desbloquear</button></div>`;
+                bgClass = isBlocked ? 'filter blur-sm select-none' : 'bg-white';
+                badgeHTML = `<span class="text-[10px] font-bold tracking-wider ${isVip ? 'text-yellow-800 bg-yellow-100 border border-yellow-200' : 'text-green-800 bg-green-100 border border-green-200'} px-2 py-1 rounded-full uppercase flex items-center gap-1">${isVip ? '<i class="ph-fill ph-crown"></i> VIP' : 'GRÁTIS'}</span>`;
+                
+                if (isBlocked) {
+                    overlayHTML = `
+                    <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/70 backdrop-blur-[3px]">
+                        <div class="bg-white p-4 rounded-xl shadow-xl text-center border border-yellow-200 max-w-[200px]">
+                            <div class="text-3xl mb-2">🔒</div>
+                            <p class="font-bold text-gray-800 mb-2">Sinal VIP</p>
+                            <button onclick="window.openModal('vipModal')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold text-sm py-2 px-4 rounded shadow w-full transition-colors active:scale-95">
+                                Liberar Acesso
+                            </button>
+                        </div>
+                    </div>`;
+                }
             }
 
             if (isAdmin) {
-                // Se já estiver finalizado, mostramos apenas o botão de apagar para limpar o visual
                 const botoesAcao = status === 'pendente' 
-                    ? `<button onclick="atualizarStatus('${id}', 'win')" class="bg-green-500 text-white text-xs px-2 py-1 rounded">✅</button>
-                       <button onclick="atualizarStatus('${id}', 'loss')" class="bg-red-500 text-white text-xs px-2 py-1 rounded">❌</button>` 
+                    ? `<button onclick="atualizarStatus('${id}', 'win')" class="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded shadow transition-transform active:scale-90" title="Marcar Green">✅</button>
+                       <button onclick="atualizarStatus('${id}', 'loss')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded shadow transition-transform active:scale-90" title="Marcar Red">❌</button>` 
                     : '';
 
-                adminControls = `<div class="absolute top-2 right-2 z-30 flex gap-2">
+                adminControls = `<div class="absolute top-3 right-3 z-30 flex gap-2">
                     ${botoesAcao}
-                    <button onclick="apagarSinal('${id}')" class="text-gray-400 hover:text-red-500 bg-white rounded-full p-1 shadow">🗑️</button>
+                    <button onclick="apagarSinal('${id}')" class="text-gray-400 hover:text-red-500 bg-white rounded-full p-1 shadow border border-gray-100 transition-colors active:scale-90" title="Apagar"><i class="ph-bold ph-trash"></i></button>
                 </div>`;
             }
 
             const progSafe = data.prognostico ? data.prognostico.replace(/"/g, '&quot;').replace(/\n/g, '<br>') : '';
-            // Botão de análise visível se não estiver bloqueado pelo overlay
-            const showAnalysisBtn = !overlayHTML;
-
+            
             return `
-            <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-4 ${borderClass} relative mb-6 transition-all duration-300">
+            <div class="bg-white rounded-xl shadow-sm hover:shadow-md overflow-hidden border-l-4 ${borderClass} relative mb-6 transition-all duration-300 ring-1 ring-gray-100">
                 ${adminControls}
                 ${overlayHTML}
                 ${status !== 'pendente' ? badgeHTML : ''}
                 
-                <div class="px-5 py-4 border-b border-gray-100">
-                    ${status === 'pendente' ? badgeHTML : ''}
-                    <h2 class="text-lg font-bold text-gray-900 mt-2">${data.jogo}</h2>
-                    <p class="text-xs text-gray-500">${data.liga} • ${formatarData(data.dataHora)}</p>
+                <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-start">
+                    <div>
+                        ${status === 'pendente' ? badgeHTML : ''}
+                        <h2 class="text-lg font-bold text-gray-900 mt-2 leading-tight">${data.jogo}</h2>
+                        <p class="text-xs text-gray-500 mt-1 flex items-center gap-1"><i class="ph ph-calendar-blank"></i> ${formatarData(data.dataHora)} • ${data.liga}</p>
+                    </div>
                 </div>
                 
                 <div class="px-5 py-4 ${bgClass}">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-sm text-gray-500">Sinal: <span class="font-bold text-blue-700 text-lg ml-1">${data.sinal}</span></p>
-                            <p class="text-sm text-gray-500">Mercado: <strong>${data.mercado}</strong></p>
+                    <div class="flex justify-between items-center gap-4">
+                        <div class="space-y-1">
+                            <p class="text-sm text-gray-500">Sinal</p>
+                            <p class="font-bold text-blue-700 text-lg leading-none">${data.sinal}</p>
+                            <p class="text-xs text-gray-400 mt-1">Mercado: ${data.mercado}</p>
                         </div>
-                        <div class="text-right bg-white p-2 rounded border border-gray-200">
-                            <p class="text-xs text-gray-500 uppercase">Odd</p>
-                            <p class="text-xl font-bold text-gray-900">${data.odd ? data.odd.toFixed(2) : '0.00'}</p>
+                        <div class="text-center bg-gray-50 p-3 rounded-lg border border-gray-100 min-w-[80px]">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wide font-semibold">Odd</p>
+                            <p class="text-2xl font-bold text-gray-900">${data.odd ? data.odd.toFixed(2) : '0.00'}</p>
                         </div>
                     </div>
                 </div>
 
-                ${showAnalysisBtn ? `<div class="px-5 py-3 bg-white border-t border-gray-100 text-center"><button onclick='abrirPrognostico("${data.jogo}", "${progSafe}")' class="text-blue-600 hover:text-blue-800 font-medium text-sm">Ver Análise Completa →</button></div>` : ''}
+                ${!overlayHTML && data.prognostico ? `
+                <div class="px-5 py-3 bg-gray-50 border-t border-gray-100 text-center">
+                    <button onclick='abrirPrognostico("${data.jogo}", "${progSafe}")' class="text-green-600 hover:text-green-800 font-medium text-sm flex items-center justify-center gap-1 w-full active:scale-95 transition-transform">
+                        <i class="ph-bold ph-article"></i> Ver Análise da IA
+                    </button>
+                </div>` : ''}
             </div>`;
         }
 
@@ -415,7 +605,12 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSalvar');
-            btn.disabled = true; btn.textContent = 'Salvando...';
+            const originalText = btn.textContent;
+            
+            btn.disabled = true; 
+            btn.textContent = 'Salvando...';
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+
             try {
                 const formData = new FormData(form);
                 const casa = document.getElementById('timeCasa').value;
@@ -437,13 +632,33 @@
                 await addDoc(collection(db, "sinais"), data);
                 form.reset(); 
                 mostrarFeed();
-            } catch (error) { alert("Erro: " + error.message); } 
-            finally { btn.disabled = false; btn.textContent = 'Salvar Sinal'; }
+                window.showToast("Sinal publicado com sucesso!", "success");
+            } catch (error) { 
+                window.showToast("Erro ao salvar: " + error.message, "error");
+            } 
+            finally { 
+                btn.disabled = false; 
+                btn.textContent = originalText;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
         });
 
-        window.apagarSinal = async (id) => { if(confirm("Tem certeza?")) { await deleteDoc(doc(db, "sinais", id)); carregarSinais(); } }
+        window.apagarSinal = async (id) => { 
+            const confirmacao = await window.customConfirm("Tem certeza que deseja apagar este sinal?");
+            if(confirmacao) { 
+                try {
+                    await deleteDoc(doc(db, "sinais", id)); 
+                    window.showToast("Sinal apagado.", "info");
+                    carregarSinais(); 
+                } catch(e) {
+                    window.showToast("Erro ao apagar.", "error");
+                }
+            } 
+        }
+
         window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
         window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+        
         window.abrirPrognostico = (t, c) => {
             document.getElementById('modal-titulo').textContent = t;
             document.getElementById('modal-conteudo').innerHTML = c;
@@ -452,6 +667,3 @@
     </script>
 </body>
 </html>
-
-
-
