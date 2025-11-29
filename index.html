@@ -196,7 +196,8 @@
                     </div>
                     <div><label class="block text-sm font-medium text-gray-700">Odd</label><input type="number" step="0.01" name="odd" required class="w-full border rounded p-2 focus:ring-2 focus:ring-green-500 outline-none"></div>
                     <div><label class="block text-sm font-medium text-gray-700">Prognóstico</label><textarea name="prognostico" rows="4" required class="w-full border rounded p-2 focus:ring-2 focus:ring-green-500 outline-none"></textarea></div>
-                    <div class="flex items-center bg-yellow-50 p-3 rounded border border-yellow-200 cursor-pointer" onclick="document.getElementById('isVip').click()">
+                    <!-- REMOVIDA A FUNÇÃO onclick="document.getElementById('isVip').click()" para evitar conflito com a label -->
+                    <div class="flex items-center bg-yellow-50 p-3 rounded border border-yellow-200 cursor-pointer">
                         <input type="checkbox" id="isVip" name="isVip" class="h-5 w-5 text-green-600 rounded cursor-pointer">
                         <label for="isVip" class="ml-2 block text-sm font-medium text-gray-700 cursor-pointer">Este é um Sinal VIP 🔒</label>
                     </div>
